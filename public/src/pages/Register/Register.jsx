@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState} from "react";
+import { Link } from "react-router-dom";
 import * as R from "./Register.styles";
 import Logo from "../../assets/logo.svg";
 import { toast, ToastContainer } from "react-toastify";
@@ -8,7 +8,7 @@ import axios from "axios";
 import { registerRoute } from "../../utils/APIRoutes";
 
 export default function Register() {
-  const navigate = useNavigate();
+ 
   const toastOptions = {
     position: "bottom-right",
     autoClose: 8000,
@@ -23,11 +23,6 @@ export default function Register() {
     confirmPassword: "",
   });
 
-  useEffect(() => {
-    if (localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)) {
-      navigate("/");
-    }
-  }, [navigate]);
 
   const handleChange = (e) => {
     setValues({ ...values, [e.target.name]: e.target.value });
@@ -67,13 +62,6 @@ export default function Register() {
 
       if (data.status === false) {
         toast.error(data.msg, toastOptions);
-      }
-      if (data.status === true) {
-        localStorage.setItem(
-          process.env.REACT_APP_LOCALHOST_KEY,
-          JSON.stringify(data.user)
-        );
-        navigate("/");
       }
     }
   };
