@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { Buffer } from "buffer";
-import loader from "../../assets/loader.gif";
+import loader from "../assets/loader.gif";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
-import { setAvatarRoute } from "../../utils/APIRoutes";
+import { setAvatarRoute } from "../utils/APIRoutes";
 export default function SetAvatar() {
   const api = `https://api.multiavatar.com/4645646`;
   const navigate = useNavigate();
@@ -21,18 +21,21 @@ export default function SetAvatar() {
     theme: "dark",
   };
 
-  useEffect(async () => {
-    if (!localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY))
-      navigate("/login");
-  }, []);
+  useEffect(() => {
+    async function checkLocalStorage() {
+      if (!localStorage.getItem("userData")) {
+        navigate("/login");
+      }
+    }
+
+    checkLocalStorage();
+  }, [navigate]);
 
   const setProfilePicture = async () => {
     if (selectedAvatar === undefined) {
-      toast.error("Please select an avatar", toastOptions);
+      toast.error("Por favor, selecione um avatar", toastOptions);
     } else {
-      const user = await JSON.parse(
-        localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-      );
+      const user = await JSON.parse(localStorage.getItem("userData"));
 
       const { data } = await axios.post(`${setAvatarRoute}/${user._id}`, {
         image: avatars[selectedAvatar],
@@ -41,29 +44,30 @@ export default function SetAvatar() {
       if (data.isSet) {
         user.isAvatarImageSet = true;
         user.avatarImage = data.image;
-        localStorage.setItem(
-          process.env.REACT_APP_LOCALHOST_KEY,
-          JSON.stringify(user)
-        );
+        localStorage.setItem("userData", JSON.stringify(user));
         navigate("/");
       } else {
-        toast.error("Error setting avatar. Please try again.", toastOptions);
+        toast.error("Erro ao Salvar o Avatar. Tente Novamente.", toastOptions);
       }
     }
   };
 
-  useEffect(async () => {
-    const data = [];
-    for (let i = 0; i < 4; i++) {
-      const image = await axios.get(
-        `${api}/${Math.round(Math.random() * 1000)}`
-      );
-      const buffer = new Buffer(image.data);
-      data.push(buffer.toString("base64"));
+  useEffect(() => {
+    async function fetchData() {
+      const avatarsData = [];
+      for (let i = 0; i < 4; i++) {
+        const imageResponse = await axios.get(
+          `${api}/${Math.round(Math.random() * 1000)}`
+        );
+        const buffer = Buffer.from(imageResponse.data);
+        avatarsData.push(buffer.toString("base64"));
+      }
+      setAvatars(avatarsData);
+      setIsLoading(false);
     }
-    setAvatars(data);
-    setIsLoading(false);
-  }, []);
+    fetchData();
+  }, [api]);
+
   return (
     <>
       {isLoading ? (
@@ -73,7 +77,7 @@ export default function SetAvatar() {
       ) : (
         <Container>
           <div className="title-container">
-            <h1>Pick an Avatar as your profile picture</h1>
+            <h1>Escolha um Avatar para o seu perfil!</h1>
           </div>
           <div className="avatars">
             {avatars.map((avatar, index) => {
@@ -82,11 +86,11 @@ export default function SetAvatar() {
                   className={`avatar ${
                     selectedAvatar === index ? "selected" : ""
                   }`}
+                  key={avatar}
                 >
                   <img
                     src={`data:image/svg+xml;base64,${avatar}`}
                     alt="avatar"
-                    key={avatar}
                     onClick={() => setSelectedAvatar(index)}
                   />
                 </div>
@@ -94,7 +98,7 @@ export default function SetAvatar() {
             })}
           </div>
           <button onClick={setProfilePicture} className="submit-btn">
-            Set as Profile Picture
+            Escolher Avatar
           </button>
           <ToastContainer />
         </Container>

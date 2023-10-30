@@ -1,18 +1,25 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Logo from "../assets/logo.svg";
+import PropTypes from "prop-types";
 
 export default function Contacts({ contacts, changeChat }) {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserImage, setCurrentUserImage] = useState(undefined);
   const [currentSelected, setCurrentSelected] = useState(undefined);
-  useEffect(async () => {
-    const data = await JSON.parse(
-      localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-    );
-    setCurrentUserName(data.username);
-    setCurrentUserImage(data.avatarImage);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await JSON.parse(localStorage.getItem("userData"));
+        setCurrentUserName(data.username);
+        setCurrentUserImage(data.avatarImage);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchData();
   }, []);
+
   const changeCurrentChat = (index, contact) => {
     setCurrentSelected(index);
     changeChat(contact);
@@ -23,7 +30,6 @@ export default function Contacts({ contacts, changeChat }) {
         <Container>
           <div className="brand">
             <img src={Logo} alt="logo" />
-            <h3>snappy</h3>
           </div>
           <div className="contacts">
             {contacts.map((contact, index) => {
@@ -76,10 +82,6 @@ const Container = styled.div`
     justify-content: center;
     img {
       height: 2rem;
-    }
-    h3 {
-      color: white;
-      text-transform: uppercase;
     }
   }
   .contacts {
@@ -150,3 +152,8 @@ const Container = styled.div`
     }
   }
 `;
+
+Contacts.propTypes = {
+  contacts: PropTypes.array.isRequired,
+  changeChat: PropTypes.func.isRequired,
+};

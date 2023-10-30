@@ -23,7 +23,7 @@ export default function Register() {
     confirmPassword: "",
   });
   useEffect(() => {
-    if (localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)) {
+    if (localStorage.getItem("userData")) {
       navigate("/");
     }
   }, [navigate]);
@@ -70,7 +70,7 @@ export default function Register() {
       }
       if (data.status === true) {
         localStorage.setItem(
-          process.env.REACT_APP_LOCALHOST_KEY,
+          "userData",
           JSON.stringify(data.user)
         );
 

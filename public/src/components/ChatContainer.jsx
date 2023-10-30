@@ -5,52 +5,65 @@ import Logout from "./Logout";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { sendMessageRoute, recieveMessageRoute } from "../utils/APIRoutes";
+import PropTypes from "prop-types";
 
 export default function ChatContainer({ currentChat, socket }) {
   const [messages, setMessages] = useState([]);
   const scrollRef = useRef();
   const [arrivalMessage, setArrivalMessage] = useState(null);
 
-  useEffect(async () => {
-    const data = await JSON.parse(
-      localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-    );
-    const response = await axios.post(recieveMessageRoute, {
-      from: data._id,
-      to: currentChat._id,
-    });
-    setMessages(response.data);
+  useEffect(() => {
+    async function fetchData() {
+      const userData = JSON.parse(localStorage.getItem("userData"));
+      if (userData) {
+        const response = await axios.post(recieveMessageRoute, {
+          from: userData._id,
+          to: currentChat._id,
+        });
+        setMessages(response.data);
+      }
+    }
+
+    fetchData();
   }, [currentChat]);
 
   useEffect(() => {
     const getCurrentChat = async () => {
-      if (currentChat) {
-        await JSON.parse(
-          localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-        )._id;
+      const userData = JSON.parse(localStorage.getItem("userData"));
+      if (currentChat && userData) {
+        const userId = userData._id;
+        return userId;
       }
     };
     getCurrentChat();
   }, [currentChat]);
 
   const handleSendMsg = async (msg) => {
-    const data = await JSON.parse(
-      localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-    );
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    if (!userData) {
+      console.log("Dados não existem", userData);
+      return;
+    }
+    const userId = userData._id; 
     socket.current.emit("send-msg", {
       to: currentChat._id,
-      from: data._id,
+      from: userId, 
       msg,
     });
-    await axios.post(sendMessageRoute, {
-      from: data._id,
+  
+    const response = await axios.post(sendMessageRoute, {
+      from: userId, 
       to: currentChat._id,
       message: msg,
     });
-
-    const msgs = [...messages];
-    msgs.push({ fromSelf: true, message: msg });
-    setMessages(msgs);
+  
+    if (response.status === 200) {
+      const msgs = [...messages];
+      msgs.push({ fromSelf: true, message: msg });
+      setMessages(msgs);
+    } else {
+      console.log("Erro na resposta", response);
+    }
   };
 
   useEffect(() => {
@@ -59,7 +72,7 @@ export default function ChatContainer({ currentChat, socket }) {
         setArrivalMessage({ fromSelf: false, message: msg });
       });
     }
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     arrivalMessage && setMessages((prev) => [...prev, arrivalMessage]);
@@ -179,3 +192,8 @@ const Container = styled.div`
     }
   }
 `;
+
+ChatContainer.propTypes = {
+  currentChat: PropTypes.object.isRequired,
+  socket: PropTypes.object.isRequired,
+};

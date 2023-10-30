@@ -3,6 +3,8 @@ import { BsEmojiSmileFill } from "react-icons/bs";
 import { IoMdSend } from "react-icons/io";
 import styled from "styled-components";
 import Picker from "emoji-picker-react";
+import PropTypes from 'prop-types';
+
 
 export default function ChatInput({ handleSendMsg }) {
   const [msg, setMsg] = useState("");
@@ -142,3 +144,7 @@ const Container = styled.div`
     }
   }
 `;
+
+ChatInput.propTypes = {
+  handleSendMsg: PropTypes.func.isRequired,
+};
